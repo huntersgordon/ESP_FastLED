@@ -80,3 +80,10 @@ body {
   padding: 0.5rem 1rem;
   cursor: pointer;
 }
+
+/* CHART */
+
+.container {
+  width: 80%;
+  margin: 15px auto;
+}
