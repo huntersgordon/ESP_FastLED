@@ -3,17 +3,28 @@
 #include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <FS.h>
+#include <TinyGPSPlus.h>
+#include <SoftwareSerial.h>
 //SPIFFS LIBRARY ISSUE FOR NEWER MAC OS RESOLVED WITH:
 //https://github.com/me-no-dev/arduino-esp32fs-plugin/issues/15#issuecomment-752965167
 #include <FastLED.h>
 #if FASTLED_VERSION < 3001000
 #error "Requires FastLED 3.1 or later; check github for latest code."
 #endif
-#define DATA_PIN    0
+#define DATA_PIN    2
 //#define CLK_PIN   4
 #define LED_TYPE    WS2811
 #define NUM_LEDS    20
 #define BRIGHTNESS  255
+
+//GPS
+
+
+
+static const int RXPin = 13, TXPin = 15;
+static const uint32_t GPSBaud = 9600;
+TinyGPSPlus gps;
+SoftwareSerial ss(RXPin, TXPin);
 
 CRGB leds[NUM_LEDS];
 
@@ -23,6 +34,9 @@ bool fade = false;
 bool strobe = false;
 bool blinky = true;
 int currFade = 255;
+int currSpeed = 0;
+const int currSpeed_size = 5;
+int currSpeedArr[currSpeed_size];
 bool down = true;
 uint16_t fadeMs = millis();
 uint16_t strobeMs = millis();
@@ -69,8 +83,14 @@ void setSolid(int R, int G, int B, bool front) {
 }
 
 void setup() {
+
+  for (int i = 0; i < currSpeed_size; i++) {
+    currSpeedArr[i] = 0;
+  }
   // Serial port for debugging purposes
-  Serial.begin(115200);
+  //Serial.begin(9600);
+  Serial.println("AsdfsdfIFFS");
+  ss.begin(GPSBaud);
   FastLED.addLeds<WS2812, DATA_PIN, GRB>(leds, NUM_LEDS);
   FastLED.setBrightness(255);
   setSolid( 255,  255, 255, true);
@@ -130,12 +150,20 @@ void setup() {
     request->send(SPIFFS, "/style.css", "text/css");
   });
 
+  server.on("/numbers.jpg", HTTP_GET, [](AsyncWebServerRequest * request) {
+    request->send(SPIFFS, "/numbers.jpg", "image/jpeg");
+  });
+
   server.on("/script.js", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(SPIFFS, "/script.js", "text/javascript");
   });
 
   server.on("/iro.min.js", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(SPIFFS, "/iro.min.js", "text/javascript");
+  });
+
+  server.on("/speed", HTTP_GET, [](AsyncWebServerRequest * request) {
+    request->send(200, "text/plain", String(currSpeed));
   });
 
   server.on("/front", HTTP_GET, [] (AsyncWebServerRequest * request) {
@@ -202,6 +230,34 @@ void setup() {
 
 void loop()
 {
+
+  while (ss.available() > 0) {
+    if (gps.encode(ss.read())) {
+      if (gps.speed.isValid()) {
+        currSpeed = floor(gps.speed.mph());
+//        Serial.print("speed is ");
+//        /*Debouncing Speed*/
+//        Serial.println(currSpeed);
+//        for (int i = currSpeed_size-1; i > 0; i--) {
+//          currSpeedArr[i] = currSpeedArr[i-1];
+//        }
+//        currSpeedArr[0] = floor(gps.speed.mph());
+//        int cspeed = 0;
+//        Serial.print("[");
+//        for (int i = 0; i < currSpeed_size; i++) {
+//          Serial.print(currSpeedArr[i]);
+//          cspeed = cspeed + currSpeedArr[i];
+//        }
+//        Serial.print("]");
+//        currSpeed = floor(cspeed/(1.0*currSpeed_size));
+//        /*Debouncing Speed*/
+        Serial.print("voltage is ");
+        Serial.println(analogRead(A0));
+      }
+    }
+  }
+
+
   if (strobe) {
     rainbow = false;
     fade = false;
