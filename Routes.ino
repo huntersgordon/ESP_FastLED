@@ -35,8 +35,8 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
     char *ret = (char*)data;
     if (strcmp(ret, "strobe") == 0) {
       FastLED.setBrightness(255);
-      strobeMs = millis();
       effect = "strobe";
+      blinky = true;
     }
     else if (strcmp(ret, "fade") == 0) {
       FastLED.setBrightness(255);

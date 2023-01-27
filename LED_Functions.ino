@@ -12,7 +12,7 @@ void updateLEDS() {
     FastLED.show();
   }
   else if (strcmp(effect, "fade") == 0) {
-  if (millis() - fadeMs > 2) {
+    if (millis() - fadeMs > 2) {
       fadeMs = millis();
       faded();
     }
@@ -54,14 +54,11 @@ void faded() {
 }
 
 void party() {
+  //strobe
   if (blinky) {
-    for (int i = 0; i < NUM_LEDS; i++) {
       FastLED.setBrightness(255);
-    }
   } else {
-    for (int i = 0; i < NUM_LEDS; i++) {
       FastLED.setBrightness(0);
-    }
   }
 }
 void pride()
